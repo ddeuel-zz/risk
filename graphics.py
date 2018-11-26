@@ -1,4 +1,4 @@
-import random, pygame, sys, const, pygame.font
+import random, pygame, sys, const, pygame.font, game
 from pygame.locals import *
 
 pygame.font.init()
@@ -8,6 +8,8 @@ myFont = pygame.font.SysFont(None, 30)
 board = pygame.image.load("sprites/board.jpg")
 
 territories = const.TERRITORIES
+
+players = const.PLAYERS
 
 def main():
     global FPSCLOCK, DISPLAYSURF
@@ -19,6 +21,9 @@ def main():
     mousey = 0 # used to store y coordinate of mouse event
     pygame.display.set_caption('Risk')
 
+    turn = 0
+
+    current_player = 1
 
 
     while True: # main game loop
@@ -44,7 +49,25 @@ def main():
           text = myFont.render(str(ter['troops']), True, const.WHITE)
           DISPLAYSURF.blit(text, adjCoords)
 
-        # circle = getCircleAtPixel(mousex, mousey)
+        player = players[current_player - 1]
+
+        if (turn < 3):
+          if (player["troops_to_place"] > 0):
+            territory = getTerritoryAtPixel(mousex, mousey)
+            if (mouseClicked):
+              territory["troops"] += 1
+              territory["color"] = player["color"]
+              player["troops_to_place"] -= 1
+          else:
+            player["troops_to_place"] = 3
+            if (current_player == len(players)):
+                current_player = 1
+                turn += 1
+            else:
+              current_player += 1
+
+
+
         # if boxx != None and boxy != None:
             # The mouse is currently over a box.
 
@@ -54,8 +77,12 @@ def main():
         FPSCLOCK.tick(const.FPS)
 
 
-def getCircleAtPixel(x, y):
-    return (x,y)
+def getTerritoryAtPixel(x, y):
+  return const.ALASKA
+    # for territory in territories:
+
+# def euDistance((x1, y1)(x2, y2)):
+
 
 if __name__ == '__main__':
     main()
