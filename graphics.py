@@ -1,4 +1,4 @@
-import random, pygame, sys, const, pygame.font, game
+import random, pygame, sys, const, pygame.font, game, math
 from pygame.locals import *
 
 pygame.font.init()
@@ -53,8 +53,10 @@ def main():
 
         if (turn < 3):
           if (player["troops_to_place"] > 0):
-            territory = getTerritoryAtPixel(mousex, mousey)
             if (mouseClicked):
+              territory = getTerritoryAtPixel(mousex, mousey)
+              if (territory == None):
+                break;
               territory["troops"] += 1
               territory["color"] = player["color"]
               player["troops_to_place"] -= 1
@@ -78,10 +80,22 @@ def main():
 
 
 def getTerritoryAtPixel(x, y):
-  return const.ALASKA
-    # for territory in territories:
+    least_dist = float("inf")
+    closest_territory = const.ALASKA
+    for territory in territories:
+      dist = euDistance(territory["coords"], (x,y))
+      if (dist < least_dist):
+        least_dist = dist
+        print(least_dist)
+        closest_territory = territory
+    if (least_dist <= 20):
+      return closest_territory
+    else:
+      return None
 
-# def euDistance((x1, y1)(x2, y2)):
+
+def euDistance((x1, y1), (x2, y2)):
+  return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
 
 if __name__ == '__main__':
