@@ -140,4 +140,4 @@ WESTERN_AUSTRALIA,EASTERN_AUSTRALIA], "bonus" : 2}
 CONTINENTS = [NORTH_AMERICA, SOUTH_AMERICA, AFRICA, EUROPE,
 ASIA, OCEANIA]
 
-PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 3}, {"player" : 2, "color" : RED, "troops_to_place" : 3}]
+PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 1}, {"player" : 2, "color" : RED, "troops_to_place" : 1}]
