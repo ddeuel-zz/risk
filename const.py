@@ -13,9 +13,9 @@ PURPLE   = (255,   0, 255)
 CYAN     = (  0, 255, 255)
 
 # NORTH AMERICA
-ALASKA = {"coords" : (86,162), "color" : GRAY, "troops" : 0, "neighbors" [NW_TERRITORY,ALBERTA]}
-WESTERN_US = {"coords" : (185,313), "color" : GRAY, "troops" : 0, "neighbors" [ALBERTA,ONTARIO, EASTERN_US, WESTERN_US]}
-NW_TERRITORY = {"coords" : (193,154), "color" : GRAY, "troops" : 0, "neighbors" []}
+ALASKA = {"coords" : (86,162), "color" : GRAY, "troops" : 0, "neighbors" [NW_TERRITORY,ALBERTA,KAMCHATKA]}
+WESTERN_US = {"coords" : (185,313), "color" : GRAY, "troops" : 0, "neighbors" [ALBERTA,ONTARIO,EASTERN_US,CENTRAL_AMERICA]}
+NW_TERRITORY = {"coords" : (193,154), "color" : GRAY, "troops" : 0, "neighbors" [ALASKA,ALBERTA,ONTARIO,GREENLAND]}
 ALBERTA = {"coords" : (178,223), "color" : GRAY, "troops" : 0, "neighbors" []}
 GREENLAND = {"coords" : (403,114), "color" : GRAY, "troops" : 0, "neighbors" []}
 QUEBEC = {"coords" : (329,236), "color" : GRAY, "troops" : 0, "neighbors" []}
