@@ -14,6 +14,13 @@ def enemy_neighbors(player, territory):
 
 	for n in neighbors:
 		if n["color"] != color:
-		enemy_territories.append(n)
+		  enemy_territories.append(n)
 
 	return enemy_territories
+
+def main():
+
+
+
+if __name__ == '__main__':
+    main()
