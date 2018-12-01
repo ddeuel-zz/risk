@@ -28,6 +28,8 @@ def main():
 
     while True: # main game loop
         player = const.PLAYERS[const.current_player - 1]
+        if player["player"] == 2:
+          game.main()
         mouseClicked = False
 
         for event in pygame.event.get(): # event handling loop

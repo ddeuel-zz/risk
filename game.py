@@ -2,10 +2,77 @@ import random, pygame, sys, const, random
 from pygame.locals import *
 
 def main():
-	print("yeet")
+	random_agent(const.PLAYERS[1])
+
+def random_agent(player):
+	unclaimed_territories = []
+	for territory in const.TERRITORIES:
+		if territory["color"] == const.GRAY:
+			unclaimed_territories.append(territory)
+	if (unclaimedTerritory()):
+		claim_territory(random.choice(unclaimed_territories), player)
+
+	elif (const.fortifying_round < 7):
+		friendlies = all_friendly_territories(player)
+		place(random.choice(friendlies), player)
+
+	elif (const.ACTIVITY == const.PLACE):
+		if (player["troops_to_place"] > 0):
+			friendlies = all_friendly_territories(player)
+			place(random.choice(friendlies), player)
+		else:
+			const.ACTIVITY = const.ATTACK
+
+	elif (const.ACTIVITY == const.ATTACK):
+		can_attack = territories_available_to_attack(player)
+		attack_times = random.randint(0, len(can_attack))
+		while (len(can_attack) > 0 and attack_times > 0):
+			can_attack = territories_available_to_attack(player)
+			attacking = random.choice(can_attack)
+			can_defend = specific_enemy_neighbors(attacking)
+			if (len(can_defend) > 0):
+				defending = random.choice(can_defend)
+				attack(attacking, defending, player)
+				attack_times -= 1
+		const.ACTIVITY = const.FORT
+
+	elif (const.ACTIVITY == const.FORT):
+		can_fortify = territories_available_to_fortify(player)
+		fortify_times = random.randint(0, len(can_fortify))
+		while (len(can_fortify) > 0 and fortify_times > 0):
+			can_fortify = territories_available_to_fortify(player)
+			if (len(can_fortify) > 0):
+				origin = random.choice(can_fortify)
+				add_to_fortify_queue(origin, player)
+				can_receive = specific_friendly_neighbors(origin)
+				if (len(can_receive) > 0):
+					destination = random.choice(can_receive)
+					place_from_fortify_queue(origin, destination, player)
+					fortify_times -= 1
+		const.ACTIVITY = const.PLACE
+		if (const.current_player == len(const.PLAYERS)):
+			const.current_player = 1
+		else:
+			const.current_player += 1
+			for p in const.PLAYERS:
+				reinforce_player(p)
+
+def territories_available_to_attack(player):
+	can_attack = []
+	for territory in const.TERRITORIES:
+		if (territory["color"] == player["color"] and territory["troops"] > 1):
+			can_attack.append(territory)
+	return can_attack
+
+def territories_available_to_fortify(player):
+	can_fortify = []
+	for territory in const.TERRITORIES:
+		if (territory["color"] == player["color"] and territory["troops"] > 1):
+			can_fortify.append(territory)
+	return can_fortify
+
 
 def all_friendly_territories(player):
-
 	friendly_territories = []
 
 	for t in const.TERRITORIES:
@@ -90,6 +157,13 @@ def unclaimedTerritory():
     if (territory["color"] == const.GRAY):
       return True
   return False
+
+def claim_territory(territory, player):
+	if (territory["color"] == const.GRAY):
+		territory["troops"] += 1
+		territory["color"] = player["color"]
+		player["troops_to_place"] -= 1
+
 
 # place one troop in given destination territory
 def place(destination, player):
