@@ -28,12 +28,13 @@ def random_agent(player):
 		attack_times = random.randint(0, len(can_attack))
 		while (len(can_attack) > 0 and attack_times > 0):
 			can_attack = territories_available_to_attack(player)
-			attacking = random.choice(can_attack)
-			can_defend = specific_enemy_neighbors(attacking)
-			if (len(can_defend) > 0):
-				defending = random.choice(can_defend)
-				attack(attacking, defending, player)
-				attack_times -= 1
+			if (len(can_attack) > 0):
+				attacking = random.choice(can_attack)
+				can_defend = specific_enemy_neighbors(attacking)
+				if (len(can_defend) > 0):
+					defending = random.choice(can_defend)
+					attack(attacking, defending, player)
+					attack_times -= 1
 		const.ACTIVITY = const.FORT
 
 	elif (const.ACTIVITY == const.FORT):
