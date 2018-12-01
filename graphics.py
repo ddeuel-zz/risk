@@ -39,8 +39,8 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 mousex, mousey = event.pos
                 mouseClicked = True
-            elif (event.type == KEYUP  and const.fortifying_round == 7):
-              if event.key == K_SPACE:
+            elif (event.type == KEYUP):
+              if (event.key == K_SPACE and const.fortifying_round == 7):
                 if (const.ACTIVITY == const.FORT):
                   const.ACTIVITY = const.PLACE
                   if (const.current_player == len(const.PLAYERS)):
@@ -51,6 +51,8 @@ def main():
                       game.reinforce_player(p)
                 else:
                   const.ACTIVITY += 1
+              elif event.key == K_x:
+                game.assign_territories()
 
 
         DISPLAYSURF.fill(const.WHITE)
@@ -134,7 +136,7 @@ def main():
               elif (territory["color"] != player["color"]):
                 defending = territory
           if (attacking and defending):
-            game.attack(attacking, defending)
+            game.attack(attacking, defending, player)
             defending = None
         elif (const.ACTIVITY == const.FORT):
           if (player["troops_to_place"] > 0 and origin):

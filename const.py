@@ -71,7 +71,7 @@ NEIGHBORS = [{"territory" : ALASKA, "neighbors" : [NW_TERRITORY,ALBERTA,KAMCHATK
 {"territory" : ALBERTA, "neighbors" : [ALASKA,NW_TERRITORY,ONTARIO,WESTERN_US]},
 {"territory" : GREENLAND, "neighbors" : [QUEBEC,NW_TERRITORY,ONTARIO,ICELAND]},
 {"territory" : QUEBEC, "neighbors" : [GREENLAND, ONTARIO, EASTERN_US]},
-{"territory" : ONTARIO, "neighbors" : [NW_TERRITORY, ALBERTA, WESTERN_US, EASTERN_US, QUEBEC]},
+{"territory" : ONTARIO, "neighbors" : [NW_TERRITORY, ALBERTA, WESTERN_US, EASTERN_US, QUEBEC, GREENLAND]},
 {"territory" : EASTERN_US, "neighbors" : [QUEBEC,ONTARIO,WESTERN_US,CENTRAL_AMERICA]},
 {"territory" : CENTRAL_AMERICA, "neighbors" : [WESTERN_US,EASTERN_US,VENEZUELA]},
 {"territory" : VENEZUELA, "neighbors" : [PERU,CENTRAL_AMERICA,BRAZIL]},

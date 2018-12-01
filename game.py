@@ -5,19 +5,11 @@ def main():
 	print("yeet")
 
 def all_friendly_territories(player):
-	color = None
-
-	for p in const.PLAYERS:
-		if p["player"] == player:
-			color = p["color"]
-
-	if not color:
-		raise "No color"
 
 	friendly_territories = []
 
-	for t in territories:
-		if t["color"] == color:
+	for t in const.TERRITORIES:
+		if t["color"] == player["color"]:
 			friendly_territories.append(t)
 
 	return friendly_territories
@@ -34,7 +26,7 @@ def specific_friendly_neighbors(territory):
 
 	for n in neighbors:
 		if n["color"] == color:
-		  friendy_territories.append(n)
+		  friendly_territories.append(n)
 
 	return friendly_territories
 
@@ -78,23 +70,16 @@ def total_troop_strength(player):
 def enemy_territories_in_continent(player, territory):
 	continent = None
 
-	for c in continents:
+	for c in const.CONTINENTS:
 		if territory in c["territories"]:
 			continent = c
 
 	color = None
 
-	for p in const.PLAYERS:
-		if p["player"] == player:
-			color = p["color"]
-
-	if not color:
-		raise "No color"
-
 	enemy_territories = 0
 
-	for t in continent:
-		if t["color"] != color:
+	for t in continent["territories"]:
+		if t["color"] != player["color"]:
 			enemy_territories += 1
 
 	return enemy_territories
@@ -118,70 +103,115 @@ def place(destination, player):
 
 # NEEDS TO BE IMPLEMENTED: CHOOSING HOW MANY TROOPS TO MOVE AFTER WINNING
 
-# NEEDS TO BE IMPLEMENTED: ONLY ALLOWING ATTACKING INTO ENEMY NEIGHBORS
-def attack(attacking, defending):
-	p = random.random()
-	# rolling 3 die
-	if (attacking["troops"] > 3):
-		if (defending["troops"] > 1):
-			if (p < .372):
-				defending["troops"] -= 2
-			if (p > .708):
-				attacking["troops"] -= 2
-			else:
-				attacking["troops"] -= 1
-				defending["troops"] -= 1
-		if (defending["troops"] == 1):
-			if (p < .66):
-				defending["troops"] -= 1
-			else:
-				attacking["troops"] -= 1
-	# rolling 2 die
-	if (attacking["troops"] == 3):
-		if (defending["troops"] > 1):
-			if (p < .228):
-				defending["troops"] -= 2
-			if (p > .552):
-				attacking["troops"] -= 2
-			else:
-				attacking["troops"] -= 1
-				defending["troops"] -= 1
-		if (defending["troops"] == 1):
-			if (p < .579):
-				defending["troops"] -= 1
-			else:
-				attacking["troops"] -= 1
-	# rolling 1 die
-	if (attacking["troops"] == 2):
-		if (defending["troops"] > 1):
-			if (p < .255):
-				defending["troops"] -= 1
-			else:
-				attacking["troops"] -= 1
-		if (defending["troops"] == 1):
-			if (p < .417):
-				defending["troops"] -= 1
-			else:
-				attacking["troops"] -= 1
-	if (defending["troops"] < 1):
-		defending["troops"] = (attacking["troops"] - 1)
-		attacking["troops"] = 1
-		defending["color"] = attacking["color"]
+def attack(attacking, defending, player):
+
+	if (attacking in all_friendly_territories(player)) and (defending in specific_enemy_neighbors(attacking)):
+
+		p = random.random()
+		# rolling 3 die
+		if (attacking["troops"] > 3):
+			if (defending["troops"] > 1):
+				if (p < .372):
+					defending["troops"] -= 2
+				if (p > .708):
+					attacking["troops"] -= 2
+				else:
+					attacking["troops"] -= 1
+					defending["troops"] -= 1
+			if (defending["troops"] == 1):
+				if (p < .66):
+					defending["troops"] -= 1
+				else:
+					attacking["troops"] -= 1
+		# rolling 2 die
+		if (attacking["troops"] == 3):
+			if (defending["troops"] > 1):
+				if (p < .228):
+					defending["troops"] -= 2
+				if (p > .552):
+					attacking["troops"] -= 2
+				else:
+					attacking["troops"] -= 1
+					defending["troops"] -= 1
+			if (defending["troops"] == 1):
+				if (p < .579):
+					defending["troops"] -= 1
+				else:
+					attacking["troops"] -= 1
+		# rolling 1 die
+		if (attacking["troops"] == 2):
+			if (defending["troops"] > 1):
+				if (p < .255):
+					defending["troops"] -= 1
+				else:
+					attacking["troops"] -= 1
+			if (defending["troops"] == 1):
+				if (p < .417):
+					defending["troops"] -= 1
+				else:
+					attacking["troops"] -= 1
+		if (defending["troops"] < 1):
+			defending["troops"] = (attacking["troops"] - 1)
+			attacking["troops"] = 1
+			defending["color"] = attacking["color"]
 
 def add_to_fortify_queue(origin, player):
 	if (origin["color"] == player["color"]):
 		player["troops_to_place"] += (origin["troops"] - 1)
 		origin["troops"] = 1
 
-# NEEDS TO BE IMPLEMENTED: ONLY ALLOWING MOVEMENT INTO FRIENDLY NEIGHBORS
 def place_from_fortify_queue(origin, destination, player):
-	 if (destination["color"] == player["color"]):
+	 if (destination in specific_friendly_neighbors(origin) or destination == origin):
 		 destination["troops"] += 1
 		 player["troops_to_place"] -= 1
 
-# NEEDS TO BE IMPLEMENTED: ADD CONTINENT AND TERRITORY BONUSES
 def reinforce_player(player):
 	player["troops_to_place"] = 3
+
+	friendlies = all_friendly_territories(player)
+
+	player["troops_to_place"] += int(len(friendlies)/3)
+
+	player_territories = friendlies
+
+	NORTH_AMERICA_owned = EUROPE_owned = SOUTH_AMERICA_owned = AFRICA_owned = ASIA_owned = OCEANIA_owned = False
+
+
+	for territory in player_territories:
+		if enemy_territories_in_continent(player, territory) == 0:
+
+			if territory in const.NORTH_AMERICA["territories"] and NORTH_AMERICA_owned == False:
+				player["troops_to_place"] += const.NORTH_AMERICA["bonus"]
+				NORTH_AMERICA_owned = True
+
+			if territory in const.EUROPE["territories"] and EUROPE_owned == False:
+				player["troops_to_place"] += const.EUROPE["bonus"]
+				EUROPE_owned = True
+
+			if territory in const.SOUTH_AMERICA["territories"] and SOUTH_AMERICA_owned == False:
+				player["troops_to_place"] += const.SOUTH_AMERICA["bonus"]
+				SOUTH_AMERICA_owned = True
+
+			if territory in const.AFRICA["territories"] and AFRICA_owned == False:
+				player["troops_to_place"] += const.AFRICA["bonus"]
+				AFRICA_owned = True
+
+			if territory in const.ASIA["territories"] and ASIA_owned == False:
+				player["troops_to_place"] += const.ASIA["bonus"]
+				ASIA_owned = True
+
+			if territory in const.OCEANIA["territories"] and OCEANIA_owned == False:
+				player["troops_to_place"] += const.OCEANIA["bonus"]
+				OCEANIA_owned = True
+
+# press x to use this function in GUI, assigns all territories for testing purposes
+def assign_territories():
+	for i in range(len(const.TERRITORIES)):
+		if (i % 2 == 0):
+			const.TERRITORIES[i]["color"] = const.BLUE
+		else:
+			const.TERRITORIES[i]["color"] = const.RED
+		const.TERRITORIES[i]["troops"] = 1
 
 if __name__ == '__main__':
     main()
