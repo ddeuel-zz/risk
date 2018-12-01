@@ -1,4 +1,4 @@
-import random, pygame, sys, const, pygame.font, game, math
+import random, pygame, sys, const, game, math
 
 from pygame.locals import *
 
@@ -19,10 +19,15 @@ def main():
     mousey = 0 # used to store y coordinate of mouse event
     pygame.display.set_caption('Risk')
 
-    current_player = 1
+    attacking = None
+    defending = None
+    origin = None
+    destination = None
+
 
 
     while True: # main game loop
+        player = const.PLAYERS[const.current_player - 1]
         mouseClicked = False
 
         for event in pygame.event.get(): # event handling loop
@@ -34,6 +39,19 @@ def main():
             elif event.type == MOUSEBUTTONUP:
                 mousex, mousey = event.pos
                 mouseClicked = True
+            elif (event.type == KEYUP  and const.fortifying_round == 7):
+              if event.key == K_SPACE:
+                if (const.ACTIVITY == const.FORT):
+                  const.ACTIVITY = const.PLACE
+                  if (const.current_player == len(const.PLAYERS)):
+                    const.current_player = 1
+                  else:
+                    const.current_player += 1
+                    for p in const.PLAYERS:
+                      game.reinforce_player(p)
+                else:
+                  const.ACTIVITY += 1
+
 
         DISPLAYSURF.fill(const.WHITE)
 
@@ -42,36 +60,100 @@ def main():
         for ter in const.TERRITORIES:
           pygame.draw.circle(DISPLAYSURF, ter['color'], ter['coords'], 20)
           adjCoords = (ter['coords'][0] - 12, ter['coords'][1] - 7)
-          text = myFont.render(str(ter['troops']), True, const.WHITE)
-          DISPLAYSURF.blit(text, adjCoords)
+          troop_count = myFont.render(str(ter['troops']), True, const.WHITE)
+          DISPLAYSURF.blit(troop_count, adjCoords)
 
-        player = const.PLAYERS[current_player - 1]
+        player_string = "current player : " + str(player["player"])
 
-        if (unclaimedTerritory()):
+        troops_to_place_string = "troops to place : " + str(player["troops_to_place"])
+
+        activity_string = "currently: "
+        if (const.ACTIVITY == const.PLACE):
+          activity_string += "placing troops"
+        if (const.ACTIVITY == const.ATTACK):
+          activity_string += "attacking"
+        if (const.ACTIVITY == const.FORT):
+          activity_string += "fortifying"
+
+
+        player_status = myFont.render(player_string, True, player["color"])
+        troops_status = myFont.render(troops_to_place_string, True, player["color"])
+        activity_status = myFont.render(activity_string, True, player["color"])
+        DISPLAYSURF.blit(player_status, (25,25))
+        DISPLAYSURF.blit(troops_status, (25,50))
+        DISPLAYSURF.blit(activity_status, (25,75))
+
+        if (game.unclaimedTerritory()):
+          if (player["troops_to_place"] > 0):
+            if (mouseClicked):
+              territory = getTerritoryAtPixel(mousex, mousey)
+              if (territory == None):
+                pass
+              elif (territory["color"] == const.GRAY):
+                territory["troops"] += 1
+                territory["color"] = player["color"]
+                player["troops_to_place"] -= 1
+          else:
+            player["troops_to_place"] = 1
+            if (const.current_player == len(const.PLAYERS)):
+                const.current_player = 1
+            else:
+              const.current_player += 1
+
+        elif(const.fortifying_round < 7):
+          if (player["troops_to_place"] > 0):
+            if (mouseClicked):
+              territory = getTerritoryAtPixel(mousex, mousey)
+              if (territory == None):
+                pass
+              elif (territory["color"] == player["color"]):
+                territory["troops"] += 1
+                player["troops_to_place"] -= 1
+          else:
+            player["troops_to_place"] = 3
+            if (const.current_player == len(const.PLAYERS)):
+                const.current_player = 1
+                const.fortifying_round += 1
+            else:
+              const.current_player += 1
+        elif (const.ACTIVITY == const.PLACE):
           if (player["troops_to_place"] > 0):
             if (mouseClicked):
               territory = getTerritoryAtPixel(mousex, mousey)
               if (territory == None):
                 pass
               else:
-                territory["troops"] += 1
-                territory["color"] = player["color"]
-                player["troops_to_place"] -= 1
-          else:
-            player["troops_to_place"] = 3
-            if (current_player == len(const.PLAYERS)):
-                current_player = 1
-            else:
-              current_player += 1
-
-        else:
-          print(game.enemy_neighbors(0, const.ALASKA))
-
-
-
-        # if boxx != None and boxy != None:
-            # The mouse is currently over a box.
-
+                game.place(territory, player)
+        elif (const.ACTIVITY == const.ATTACK):
+          if (mouseClicked):
+              territory = getTerritoryAtPixel(mousex, mousey)
+              if (territory == None):
+                pass
+              elif (territory["color"] == player["color"]):
+                attacking = territory
+              elif (territory["color"] != player["color"]):
+                defending = territory
+          if (attacking and defending):
+            game.attack(attacking, defending)
+            defending = None
+        elif (const.ACTIVITY == const.FORT):
+          if (player["troops_to_place"] > 0 and origin):
+            if (mouseClicked):
+              destination = getTerritoryAtPixel(mousex, mousey)
+              if (destination == None):
+                pass
+              else:
+                game.place_from_fortify_queue(origin, destination, player)
+                destination = None
+                if (player["troops_to_place"] == 0):
+                  origin = None
+          elif (mouseClicked):
+              territory = getTerritoryAtPixel(mousex, mousey)
+              if (territory == None):
+                pass
+              elif (territory["color"] == player["color"] and not origin):
+                origin = territory
+                game.add_to_fortify_queue(origin, player)
 
         # Redraw the screen and wait a clock tick.
         pygame.display.update()
@@ -95,11 +177,6 @@ def getTerritoryAtPixel(x, y):
 def euDistance((x1, y1), (x2, y2)):
   return math.sqrt((x2-x1)**2 + (y2-y1)**2)
 
-def unclaimedTerritory():
-  for territory in const.TERRITORIES:
-    if (territory["color"] == const.GRAY):
-      return True
-  return False
 
 
 if __name__ == '__main__':

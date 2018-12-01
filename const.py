@@ -141,3 +141,15 @@ CONTINENTS = [NORTH_AMERICA, SOUTH_AMERICA, AFRICA, EUROPE,
 ASIA, OCEANIA]
 
 PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 1}, {"player" : 2, "color" : RED, "troops_to_place" : 1}]
+
+fortifying_round = 1
+
+current_player = 1
+
+PLACE = 0
+
+ATTACK = 1
+
+FORT = 2
+
+ACTIVITY = PLACE
