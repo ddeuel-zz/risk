@@ -27,9 +27,7 @@ def main():
 
 
     while True: # main game loop
-        player = const.PLAYERS[const.current_player - 1]
-        if player["player"] == 2:
-          game.main()
+        player = const.PLAYERS[0]
         mouseClicked = False
 
         for event in pygame.event.get(): # event handling loop
@@ -45,12 +43,8 @@ def main():
               if (event.key == K_SPACE and const.fortifying_round == 7):
                 if (const.ACTIVITY == const.FORT):
                   const.ACTIVITY = const.PLACE
-                  if (const.current_player == len(const.PLAYERS)):
-                    const.current_player = 1
-                  else:
-                    const.current_player += 1
-                    for p in const.PLAYERS:
-                      game.reinforce_player(p)
+                  game.reinforce_player(player)
+                  game.random_agent(const.PLAYERS[1])
                 else:
                   const.ACTIVITY += 1
               elif event.key == K_x:
@@ -99,10 +93,7 @@ def main():
                 player["troops_to_place"] -= 1
           else:
             player["troops_to_place"] = 1
-            if (const.current_player == len(const.PLAYERS)):
-                const.current_player = 1
-            else:
-              const.current_player += 1
+            game.random_agent(const.PLAYERS[1])
 
         elif(const.fortifying_round < 7):
           if (player["troops_to_place"] > 0):
@@ -115,11 +106,7 @@ def main():
                 player["troops_to_place"] -= 1
           else:
             player["troops_to_place"] = 3
-            if (const.current_player == len(const.PLAYERS)):
-                const.current_player = 1
-                const.fortifying_round += 1
-            else:
-              const.current_player += 1
+            game.random_agent(const.PLAYERS[1])
         elif (const.ACTIVITY == const.PLACE):
           if (player["troops_to_place"] > 0):
             if (mouseClicked):
