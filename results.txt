@@ -1,0 +1,21 @@
+230
+155
+110
+182
+209
+149
+164
+179
+236
+125
+134
+116
+131
+128
+155
+179
+Saving session...
+...copying shared history...
+...saving history...truncating history files...
+...completed.
+Deleting expired sessions...120 completed.
