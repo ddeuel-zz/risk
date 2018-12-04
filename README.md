@@ -1,6 +1,6 @@
 # risk
 
-choosy agent - average rounds to win against random agent over 1000 games = 109.71
+choosy agent 1.0 - average rounds to win against random agent over 1000 games = 71.5
 
 # citations:
 

@@ -72,7 +72,7 @@ def random_agent(player):
 		const.ACTIVITY = const.PLACE
 		if is_terminal():
 			return False
-		return True
+	return True
 
 def choosy_agent(player):
 	can_claim = unclaimed_territories()
@@ -176,7 +176,7 @@ def choosy_agent(player):
 		const.ACTIVITY = const.PLACE
 		if is_terminal():
 			return False
-		return True
+	return True
 
 
 def decide_attack(player):
