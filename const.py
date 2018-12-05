@@ -140,7 +140,12 @@ WESTERN_AUSTRALIA,EASTERN_AUSTRALIA], "bonus" : 2}
 CONTINENTS = [NORTH_AMERICA, SOUTH_AMERICA, AFRICA, EUROPE,
 ASIA, OCEANIA]
 
-PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 1}, {"player" : 2, "color" : RED, "troops_to_place" : 1}]
+PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 1},
+{"player" : 2, "color" : RED, "troops_to_place" : 1},
+{"player" : 3, "color" : PURPLE, "troops_to_place" : 1},
+{"player" : 4, "color" : GREEN, "troops_to_place" : 1},
+{"player" : 5, "color" : CYAN, "troops_to_place" : 1},
+{"player" : 6, "color" : ORANGE, "troops_to_place" : 1},]
 
 fortifying_round = 1
 

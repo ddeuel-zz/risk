@@ -103,8 +103,11 @@ def choosy_agent(player):
 	elif (const.fortifying_round < 7):
 		player["troops_to_place"] = 3
 		friendlies = all_friendly_territories(player)
-		neighboring_enemies = total_enemy_neighbors(friendlies)
-		border_friendlies = total_enemy_neighbors(neighboring_enemies)
+		border_friendlies = []
+		for f in friendlies:
+			if (len(specific_enemy_neighbors(f)) > 0):
+				border_friendlies.append(f)
+		print(border_friendlies)
 		while (player["troops_to_place"] > 0):
 			greatest_enemy_threat = 0
 			territories_to_fortify = []
@@ -133,7 +136,11 @@ def choosy_agent(player):
 		while (player["troops_to_place"] > 0):
 			friendlies = all_friendly_territories(player)
 			neighboring_enemies = total_enemy_neighbors(friendlies)
-			border_friendlies = total_enemy_neighbors(neighboring_enemies)
+			all_enemies_of_enemy = total_enemy_neighbors(neighboring_enemies)
+			border_friendlies = []
+			for e in all_enemies_of_enemy:
+				if e["color"] == player["color"]:
+					border_friendlies.append(e)
 			greatest_enemy_threat = float("-inf")
 			territories_to_fortify = []
 
@@ -159,7 +166,7 @@ def choosy_agent(player):
 	if (const.ACTIVITY == const.ATTACK):
 		attacks = decide_attack(player)
 		while(len(attacks) > 0):
-			# print(attacks)
+			print(attacks)
 			attacks = decide_attack(player)
 			for action in attacks:
 				attack(action[0], action[1], player)
@@ -167,8 +174,10 @@ def choosy_agent(player):
 
 	if (const.ACTIVITY == const.FORT):
 		friendlies = all_friendly_territories(player)
-		neighboring_enemies = total_enemy_neighbors(friendlies)
-		border_friendlies = total_enemy_neighbors(neighboring_enemies)
+		border_friendlies = []
+		for f in friendlies:
+			if (len(specific_enemy_neighbors(f)) > 0):
+				border_friendlies.append(f)
 		fortifying_flag = True
 
 		while(fortifying_flag):
@@ -201,7 +210,7 @@ def decide_attack(player):
 
 	attackable_enemy_territories = total_enemy_neighbors(friendlies_with_troops)
 
-	best_troop_difference = -1000
+	best_troop_difference = float("-inf")
 
 	attacks = []
 
@@ -210,18 +219,21 @@ def decide_attack(player):
 
 	for enemy_territory in attackable_enemy_territories:
 		enemy_troops = enemy_territory["troops"]
-		for friendly in specific_enemy_neighbors(enemy_territory):
-			troop_difference = friendly["troops"] - enemy_troops
-			if (troop_difference > 3):
-				attacks.append((friendly, enemy_territory))
+		for f in specific_enemy_neighbors(enemy_territory):
+			if (f["color"] == player["color"]):
+				troop_difference = f["troops"] - enemy_troops
+				if (troop_difference > 3):
+					attacks.append((f, enemy_territory))
 
 	return attacks
 
 
 def territories_available_to_attack(player):
 	friendlies = all_friendly_territories(player)
-	neighboring_enemies = total_enemy_neighbors(friendlies)
-	border_friendlies = total_enemy_neighbors(neighboring_enemies)
+	border_friendlies = []
+	for f in friendlies:
+		if (len(specific_enemy_neighbors(f)) > 0):
+			border_friendlies.append(f)
 	can_attack = []
 	for border_friendly in border_friendlies:
 		if (border_friendly["color"] == player["color"] and border_friendly["troops"] > 1):
@@ -358,6 +370,7 @@ def place(destination, player):
 # SHOULD BE IMPLEMENTED: CHOOSING HOW MANY TROOPS TO MOVE AFTER WINNING
 
 def attack(attacking, defending, player):
+	# calling attack
 	if (attacking in all_friendly_territories(player)) and (defending in specific_enemy_neighbors(attacking)):
 		p = random.random()
 		# rolling 3 die
@@ -458,12 +471,12 @@ def reinforce_player(player):
 
 # press x to use this function in GUI, assigns all territories for testing purposes
 def assign_territories():
-	for i in range(len(const.TERRITORIES)):
-		if (i % 2 == 0):
-			const.TERRITORIES[i]["color"] = const.BLUE
-		else:
-			const.TERRITORIES[i]["color"] = const.RED
-		const.TERRITORIES[i]["troops"] = 1
+	i = 0
+	while (i < len(const.TERRITORIES)):
+		for p in const.PLAYERS:
+			const.TERRITORIES[i]["color"] = p["color"]
+			const.TERRITORIES[i]["troops"] = 1
+			i += 1
 
 # determine if game is won
 def is_terminal():
