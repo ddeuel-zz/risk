@@ -2,21 +2,30 @@ import random, pygame, sys, const, random, os
 from pygame.locals import *
 
 # FOR TESTING:
-# for i in {1..1000}; do python game.py;  done > results.txt
-# results.txt will contain 1000 games, with the number of rounds
-# it took to win each game on a seperate line
-# average the numbers in results.txt here: https://www.calculatorsoup.com/calculators/statistics/average.php
+# for i in {1..1000}; do python game.py; done
+# results.txt will contain 1000 games, with the number of rounds or winner on each line
+# interpret results.txt with this: https://www.calculatorsoup.com/calculators/statistics/standard-deviation-calculator.php
+# put everything in the readme
+# make sure to delete winner.txt and rounds.txt
 
 def main():
+	winner = 0
 	rounds = 0
+	f1 = open("winner.txt", "a")
+	f2 = open("rounds.txt", "a")
 	game_active = True
-	while game_active:
-		if (rounds < 500):
-			game_active = random_agent(const.PLAYERS[0])
+	while (game_active):
+			game_active = choosy_agent(const.PLAYERS[0])
 			if game_active:
 				game_active = choosy_agent(const.PLAYERS[1])
+			else:
+				winner = 1
 			rounds += 1
-	print(rounds)
+	if (winner != 1):
+		winner = 2
+	f1.write(str(winner) + ",")
+	f2.write(str(rounds) + ",")
+	print("player " + str(winner) + " wins after " + str(rounds) + " rounds")
 
 
 def random_agent(player):
@@ -113,7 +122,8 @@ def choosy_agent(player):
 
 				elif (neighboring_enemy_troops - friendly_troops == greatest_enemy_threat):
 					territories_to_fortify.append(border_friendly)
-			place(random.choice(territories_to_fortify), player)
+			if (len(territories_to_fortify) > 0):
+				place(random.choice(territories_to_fortify), player)
 		if (player["player"] == len(const.PLAYERS)):
 			const.fortifying_round += 1
 
@@ -124,7 +134,7 @@ def choosy_agent(player):
 			friendlies = all_friendly_territories(player)
 			neighboring_enemies = total_enemy_neighbors(friendlies)
 			border_friendlies = total_enemy_neighbors(neighboring_enemies)
-			greatest_enemy_threat = -1000
+			greatest_enemy_threat = float("-inf")
 			territories_to_fortify = []
 
 			for border_friendly in border_friendlies:
@@ -142,11 +152,17 @@ def choosy_agent(player):
 					territories_to_fortify.append(border_friendly)
 			if (len(territories_to_fortify) > 0):
 				place(random.choice(territories_to_fortify), player)
+			else:
+				break
 		const.ACTIVITY = const.ATTACK
 
 	if (const.ACTIVITY == const.ATTACK):
-		attacking_defending = decide_attack(player)
-		attack(attacking_defending[0], attacking_defending[1], player)
+		attacks = decide_attack(player)
+		while(len(attacks) > 0):
+			# print(attacks)
+			attacks = decide_attack(player)
+			for action in attacks:
+				attack(action[0], action[1], player)
 		const.ACTIVITY = const.FORT
 
 	if (const.ACTIVITY == const.FORT):
@@ -178,7 +194,7 @@ def choosy_agent(player):
 			return False
 	return True
 
-
+# return a list of all attacks above a threshold of advantage
 def decide_attack(player):
 	friendlies = all_friendly_territories(player)
 	friendlies_with_troops = territories_available_to_attack(player)
@@ -187,6 +203,8 @@ def decide_attack(player):
 
 	best_troop_difference = -1000
 
+	attacks = []
+
 	attacking = None
 	defending = None
 
@@ -194,12 +212,10 @@ def decide_attack(player):
 		enemy_troops = enemy_territory["troops"]
 		for friendly in specific_enemy_neighbors(enemy_territory):
 			troop_difference = friendly["troops"] - enemy_troops
-			if troop_difference > best_troop_difference:
-				best_troop_difference = troop_difference
-				attacking = friendly
-				defending = enemy_territory
+			if (troop_difference > 3):
+				attacks.append((friendly, enemy_territory))
 
-	return (attacking, defending)
+	return attacks
 
 
 def territories_available_to_attack(player):
