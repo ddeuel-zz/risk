@@ -44,11 +44,11 @@ def main():
                 if (const.ACTIVITY == const.FORT):
                   const.ACTIVITY = const.PLACE
                   game.reinforce_player(player)
-                  game.choosy_agent(const.PLAYERS[1])
-                  game.choosy_agent(const.PLAYERS[2])
-                  game.choosy_agent(const.PLAYERS[3])
-                  game.choosy_agent(const.PLAYERS[4])
-                  game.choosy_agent(const.PLAYERS[5])
+                  game.approximate_agent(const.PLAYERS[1])
+                  # game.choosy_agent(const.PLAYERS[2])
+                  # game.choosy_agent(const.PLAYERS[3])
+                  # game.choosy_agent(const.PLAYERS[4])
+                  # game.choosy_agent(const.PLAYERS[5])
                 else:
                   const.ACTIVITY += 1
               elif event.key == K_x:
@@ -97,11 +97,11 @@ def main():
                 player["troops_to_place"] -= 1
           else:
             player["troops_to_place"] = 1
-            game.choosy_agent(const.PLAYERS[1])
-            game.choosy_agent(const.PLAYERS[2])
-            game.choosy_agent(const.PLAYERS[3])
-            game.choosy_agent(const.PLAYERS[4])
-            game.choosy_agent(const.PLAYERS[5])
+            game.approximate_agent(const.PLAYERS[1])
+            # game.choosy_agent(const.PLAYERS[2])
+            # game.choosy_agent(const.PLAYERS[3])
+            # game.choosy_agent(const.PLAYERS[4])
+            # game.choosy_agent(const.PLAYERS[5])
 
         elif(const.fortifying_round < 7):
           if (player["troops_to_place"] > 0):
@@ -114,11 +114,11 @@ def main():
                 player["troops_to_place"] -= 1
           else:
             player["troops_to_place"] = 3
-            game.choosy_agent(const.PLAYERS[1])
-            game.choosy_agent(const.PLAYERS[2])
-            game.choosy_agent(const.PLAYERS[3])
-            game.choosy_agent(const.PLAYERS[4])
-            game.choosy_agent(const.PLAYERS[5])
+            game.approximate_agent(const.PLAYERS[1])
+            # game.choosy_agent(const.PLAYERS[2])
+            # game.choosy_agent(const.PLAYERS[3])
+            # game.choosy_agent(const.PLAYERS[4])
+            # game.choosy_agent(const.PLAYERS[5])
         elif (const.ACTIVITY == const.PLACE):
           if (player["troops_to_place"] > 0):
             if (mouseClicked):

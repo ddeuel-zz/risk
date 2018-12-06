@@ -1,5 +1,4 @@
-import random, pygame, sys, const, random, os
-from pygame.locals import *
+import random, pygame, sys, const, random, os, copy
 
 # FOR TESTING:
 # for i in {1..1000}; do python game.py; done
@@ -107,9 +106,8 @@ def choosy_agent(player):
 		for f in friendlies:
 			if (len(specific_enemy_neighbors(f)) > 0):
 				border_friendlies.append(f)
-		print(border_friendlies)
 		while (player["troops_to_place"] > 0):
-			greatest_enemy_threat = 0
+			greatest_enemy_threat = float("-inf")
 			territories_to_fortify = []
 
 			for border_friendly in border_friendlies:
@@ -166,7 +164,6 @@ def choosy_agent(player):
 	if (const.ACTIVITY == const.ATTACK):
 		attacks = decide_attack(player)
 		while(len(attacks) > 0):
-			print(attacks)
 			attacks = decide_attack(player)
 			for action in attacks:
 				attack(action[0], action[1], player)
@@ -202,6 +199,242 @@ def choosy_agent(player):
 		if is_terminal():
 			return False
 	return True
+
+def approximate_agent(player):
+	can_claim = unclaimed_territories()
+	if (unclaimedTerritory()):
+		best_territory = None
+		best = -1000
+		for territory in can_claim:
+			enemy_territories = enemy_territories_in_continent(player, territory)
+			friendly_territories = friendly_territories_in_continent(player, territory)
+
+			current = friendly_territories - enemy_territories
+			if current > best:
+				best = current
+				best_territory = territory
+
+		claim_territory(best_territory, player)
+		player["troops_to_place"] = 1
+
+	elif (const.fortifying_round < 7):
+		player["troops_to_place"] = 3
+		friendlies = all_friendly_territories(player)
+		border_friendlies = []
+		for f in friendlies:
+			if (len(specific_enemy_neighbors(f)) > 0):
+				border_friendlies.append(f)
+		while (player["troops_to_place"] > 0):
+			greatest_enemy_threat = float("-inf")
+			territories_to_fortify = []
+
+			for border_friendly in border_friendlies:
+				neighboring_enemy_troops = 0
+				friendly_troops = border_friendly["troops"]
+
+				for enemy_neighbor in specific_enemy_neighbors(border_friendly):
+					neighboring_enemy_troops += enemy_neighbor["troops"]
+
+				if (neighboring_enemy_troops - friendly_troops > greatest_enemy_threat):
+					greatest_enemy_threat = neighboring_enemy_troops - friendly_troops
+					territories_to_fortify = [border_friendly]
+
+				elif (neighboring_enemy_troops - friendly_troops == greatest_enemy_threat):
+					territories_to_fortify.append(border_friendly)
+			if (len(territories_to_fortify) > 0):
+				place(random.choice(territories_to_fortify), player)
+		if (player["player"] == len(const.PLAYERS)):
+			const.fortifying_round += 1
+
+
+	if (const.ACTIVITY == const.PLACE and const.fortifying_round == 7):
+		reinforce_player(player)
+		while (player["troops_to_place"] > 0):
+			friendlies = all_friendly_territories(player)
+			neighboring_enemies = total_enemy_neighbors(friendlies)
+			all_enemies_of_enemy = total_enemy_neighbors(neighboring_enemies)
+			border_friendlies = []
+			for e in all_enemies_of_enemy:
+				if e["color"] == player["color"]:
+					border_friendlies.append(e)
+			greatest_enemy_threat = float("-inf")
+			territories_to_fortify = []
+
+			for border_friendly in border_friendlies:
+				neighboring_enemy_troops = 0
+				friendly_troops = border_friendly["troops"]
+
+				for enemy_neighbor in specific_enemy_neighbors(border_friendly):
+					neighboring_enemy_troops += enemy_neighbor["troops"]
+
+				if ((neighboring_enemy_troops - friendly_troops) > greatest_enemy_threat):
+					greatest_enemy_threat = neighboring_enemy_troops - friendly_troops
+					territories_to_fortify = [border_friendly]
+
+				elif (neighboring_enemy_troops - friendly_troops == greatest_enemy_threat):
+					territories_to_fortify.append(border_friendly)
+			if (len(territories_to_fortify) > 0):
+				place(random.choice(territories_to_fortify), player)
+			else:
+				break
+		const.ACTIVITY = const.ATTACK
+
+	if (const.ACTIVITY == const.ATTACK):
+		friendlies_with_troops = territories_available_to_attack(player)
+
+		for friendly in friendlies_with_troops:
+			for enemy in specific_enemy_neighbors(friendly):
+				attack_value = evaluate_attack(friendly, enemy, const.TERRITORIES, player)
+				value = evaluate(const.TERRITORIES, player)
+				if ((attack_value - value) > 0.5):
+					state = copy.deepcopy(const.TERRITORIES)
+					attack(friendly, enemy, player)
+					reward = evaluate(const.TERRITORIES, player) - value
+					update_after_attack(player, state, friendly, enemy, const.TERRITORIES, reward, attack_value)
+		const.ACTIVITY = const.FORT
+
+	if (const.ACTIVITY == const.FORT):
+		friendlies = all_friendly_territories(player)
+		border_friendlies = []
+		for f in friendlies:
+			if (len(specific_enemy_neighbors(f)) > 0):
+				border_friendlies.append(f)
+		fortifying_flag = True
+
+		while(fortifying_flag):
+			fortifying_flag = False
+			friendlies_with_troops = territories_available_to_fortify(player)
+			for friendly in friendlies_with_troops:
+				if (friendly not in border_friendlies):
+					fortifying_flag == True
+					add_to_fortify_queue(friendly, player)
+					inital = player["troops_to_place"]
+					while (player["troops_to_place"] > 0):
+						for neighbor in specific_friendly_neighbors(friendly):
+							if (neighbor in border_friendlies):
+								place_from_fortify_queue(friendly, neighbor, player)
+						if (player["troops_to_place"] == inital):
+							break
+					while (player["troops_to_place"] > 0):
+						for neighbor in specific_friendly_neighbors(friendly):
+								place_from_fortify_queue(friendly, neighbor, player)
+
+		const.ACTIVITY = const.PLACE
+		if is_terminal():
+			return False
+	return True
+
+
+def controlled_territories(state, player):
+	value = 0
+	for ter in state:
+		if ter["color"] == player["color"]:
+			value += 1
+	return value
+
+def update_for_battle(attacking, defending, state, player):
+	iA = state.index(attacking)
+	iD = state.index(defending)
+	if (defending["troops"] < 1):
+			defending["troops"] = (attacking["troops"] - 1)
+			attacking["troops"] = 1
+			defending["color"] = attacking["color"]
+			state[iA] = attacking
+			state[iD] = defending
+
+def evaluate_attack(attacking, defending, state, player):
+	value = evaluate(state, player)
+	if (attacking["troops"] > 3):
+		if (defending["troops"] > 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 2
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 2
+			temp_state3 = copy.deepcopy(state)
+			iD = temp_state3.index(defending)
+			iA = temp_state3.index(attacking)
+			temp_state3[iD]["troops"] -= 1
+			temp_state3[iA]["troops"] -= 1
+			update_for_battle(temp_state3[iA], temp_state3[iD], temp_state3, player)
+			value = .372 * evaluate(temp_state1, player)\
+						+ .292 * evaluate(temp_state2, player)\
+						+ .336 * evaluate(temp_state3, player)
+		if (defending["troops"] == 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 1
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 1
+			value = .66 * evaluate(temp_state1, player)\
+						+ .34 * evaluate(temp_state2, player)
+	# rolling 2 die
+	if (attacking["troops"] == 3):
+		if (defending["troops"] > 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 2
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 2
+			temp_state3 = copy.deepcopy(state)
+			iD = temp_state3.index(defending)
+			iA = temp_state3.index(attacking)
+			temp_state3[iD]["troops"] -= 1
+			temp_state3[iA]["troops"] -= 1
+			update_for_battle(temp_state3[iA], temp_state3[iD], temp_state3, player)
+			value = .228 * evaluate(temp_state1, player)\
+						+ .448 * evaluate(temp_state2, player)\
+						+ .324 * evaluate(temp_state3, player)
+		if (defending["troops"] == 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 1
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 1
+			value = .579 * evaluate(temp_state1, player)\
+						+ .421 * evaluate(temp_state2, player)
+	# rolling 1 die
+	if (attacking["troops"] == 2):
+		if (defending["troops"] > 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 1
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 1
+			value = .255 * evaluate(temp_state1, player)\
+						+ .745 * evaluate(temp_state2, player)
+		if (defending["troops"] == 1):
+			temp_state1 = copy.deepcopy(state)
+			i = temp_state1.index(defending)
+			temp_state1[i]["troops"] -= 1
+			update_for_battle(temp_state1[temp_state1.index(attacking)], temp_state1[i], temp_state1, player)
+			temp_state2 = copy.deepcopy(state)
+			temp_state2[temp_state2.index(attacking)]["troops"] -= 1
+			value = .417 * evaluate(temp_state1, player)\
+						+ .583 * evaluate(temp_state2, player)
+	return value
+
+def evaluate(state, player):
+	const.features["controlled_territories"] = {"value": controlled_territories(state,player), "weighting": 1.0}
+	value = 0
+	for feature in const.features.values():
+		value += feature["value"] * feature["weighting"]
+	return value
+
+def update_after_attack(player, state, attacking, defending, nextState, reward, prev_Q_value):
+	discount = 0.9
+	alpha = 0.3
+	difference = (reward + discount * evaluate(nextState, player)) - prev_Q_value
+	for feature in const.features.values():
+		feature["value"] = controlled_territories(state, player)
+		feature["weighting"] += alpha * difference * feature["value"]
+		print(feature["weighting"])
+
 
 # return a list of all attacks above a threshold of advantage
 def decide_attack(player):
@@ -261,6 +494,8 @@ def all_friendly_territories(player):
 def specific_friendly_neighbors(territory):
 	color = territory["color"]
 
+	neighbors = []
+
 	for neighbor in const.NEIGHBORS:
 		if neighbor["territory"] == territory:
 			neighbors = neighbor["neighbors"]
@@ -276,6 +511,8 @@ def specific_friendly_neighbors(territory):
 
 def specific_enemy_neighbors(territory):
 	color = territory["color"]
+
+	neighbors = []
 
 	for neighbor in const.NEIGHBORS:
 		if neighbor["territory"] == territory:
@@ -501,7 +738,6 @@ def unclaimed_territories():
 		if territory["color"] == const.GRAY:
 			ret.append(territory)
 	return ret
-
 
 if __name__ == '__main__':
     main()
