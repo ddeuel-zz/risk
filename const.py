@@ -159,4 +159,9 @@ FORT = 2
 
 ACTIVITY = PLACE
 
-features = {"controlled_territories" : {"value": 0, "weighting": 1}}
+features = {"controlled_territories" : {"value": 0, "weighting": 1},
+            "controlled_continents" : {"value": 0, "weighting": 5},
+            "num_neighboring_enemy_troops" : {"value": 0, "weighting": -0.5},
+            "num_neighboring_enemy_territories" : {"value": 0, "weighting": -1},
+            "num_total_enemy_troops" : {"value": 0, "weighting": -0.3},
+            "num_remaining_enemies" : {"value": 0, "weighting": -2}}

@@ -33,6 +33,7 @@ def main():
 			max_weighting_value = abs(feature["weighting"])
 	for feature in const.features.values():
 		feature["weighting"] = feature["weighting"] / max_weighting_value
+	print(const.features)
 	f1.write(str(winner) + ",")
 	f2.write(str(rounds) + ",")
 	print("player " + str(winner) + " wins after " + str(rounds) + " rounds")
@@ -293,11 +294,14 @@ def approximate_agent(player):
 	if (const.ACTIVITY == const.ATTACK):
 		friendlies_with_troops = territories_available_to_attack(player)
 
+		value = evaluate(const.TERRITORIES, player)
 		for friendly in friendlies_with_troops:
 			for enemy in specific_enemy_neighbors(friendly):
 				attack_value = evaluate_attack(friendly, enemy, const.TERRITORIES, player)
-				value = evaluate(const.TERRITORIES, player)
-				if (abs(attack_value) > abs(value)):
+				# print("value after attacking: " + str(attack_value))
+				# print("value: " + str(value))
+				if (attack_value > value):
+					print("attacking")
 					state = copy.deepcopy(const.TERRITORIES)
 					attack(friendly, enemy, player)
 					reward = evaluate(const.TERRITORIES, player) - value
@@ -342,6 +346,49 @@ def controlled_territories(state, player):
 		if ter["color"] == player["color"]:
 			value += 1
 	return value
+
+def controlled_continents(state, player):
+	continents = []
+	for ter in state:
+		if ter["color"] == player["color"]:
+			if enemy_territories_in_continent(player, ter) == 0:
+				for c in const.CONTINENTS:
+					if ter in c["territories"]:
+						continent = c
+						if continent not in continents:
+							continents.append(continent)
+	return len(continents)
+
+def num_neighboring_enemy_troops(state, player):
+	friendlies = all_friendly_territories(player)
+	enemies = total_enemy_neighbors(friendlies)
+	enemy_troops = 0
+	for enemy in enemies:
+		enemy_troops += enemy["troops"]
+	return enemy_troops
+
+def num_neighboring_enemy_territories(state, player):
+	friendlies = all_friendly_territories(player)
+	enemies = total_enemy_neighbors(friendlies)
+	return len(enemies)
+
+def num_total_enemy_troops(state, player):
+	enemies = []
+	for ter in state:
+		if ter["color"] != player["color"]:
+			enemies.append(ter)
+	enemy_troops = 0
+	for enemy in enemies:
+		enemy_troops += enemy["troops"]
+	return enemy_troops
+
+def num_remaining_enemies(state, player):
+	enemy_colors = []
+	for ter in state:
+		if ter["color"] != player["color"]:
+			if ter["color"] not in enemy_colors:
+				enemy_colors.append(ter["color"])
+	return len(enemy_colors)
 
 def update_for_battle(attacking, defending, state, player):
 	iA = state.index(attacking)
@@ -435,11 +482,12 @@ def evaluate(state, player):
 	for feature_name, feature in const.features.iteritems():
 		feature["value"] = globals()[feature_name](state, player)
 		value += feature["value"] * feature["weighting"]
+	# print(value)
 	return value
 
 def update_after_attack(player, state, attacking, defending, nextState, reward, prev_value):
 	discount = 0.9
-	alpha = 0.3
+	alpha = 0.00001
 	difference = (reward + discount * evaluate(nextState, player)) - prev_value
 	for feature_name, feature in const.features.iteritems():
 		feature["value"] = globals()[feature_name](state, player)
