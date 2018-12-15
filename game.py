@@ -1,27 +1,38 @@
-import random, pygame, sys, const, random, os, copy
+import random, pygame, sys, const, random, os, copy, shelve
 
 # FOR TESTING:
+# rm winner.txt rounds.txt
 # for i in {1..1000}; do python game.py; done
-# results.txt will contain 1000 games, with the number of rounds or winner on each line
-# interpret results.txt with this: https://www.calculatorsoup.com/calculators/statistics/standard-deviation-calculator.php
+# rounds.txt and winner.txt will contain 1000 games, with the number of rounds or winner as comma seperated values for the respective file
+# interpret the results with this: https://www.calculatorsoup.com/calculators/statistics/standard-deviation-calculator.php
 # put everything in the readme
-# make sure to delete winner.txt and rounds.txt
 
 def main():
 	winner = 0
 	rounds = 0
 	f1 = open("winner.txt", "a")
 	f2 = open("rounds.txt", "a")
+	shelved_features = shelve.open("shelved_features.db", writeback=True)
+	occupied_shelf = shelved_features.has_key("controlled_territories")
+	if (not occupied_shelf):
+		shelved_features.update(const.features)
+	const.features = shelved_features
 	game_active = True
 	while (game_active):
-			game_active = choosy_agent(const.PLAYERS[0])
+			game_active = approximate_agent(const.PLAYERS[0])
 			if game_active:
-				game_active = choosy_agent(const.PLAYERS[1])
+				game_active = random_agent(const.PLAYERS[1])
 			else:
 				winner = 1
 			rounds += 1
 	if (winner != 1):
 		winner = 2
+	max_weighting_value = 0
+	for feature in const.features.values():
+		if (abs(feature["weighting"]) > abs(max_weighting_value)):
+			max_weighting_value = abs(feature["weighting"])
+	for feature in const.features.values():
+		feature["weighting"] = feature["weighting"] / max_weighting_value
 	f1.write(str(winner) + ",")
 	f2.write(str(rounds) + ",")
 	print("player " + str(winner) + " wins after " + str(rounds) + " rounds")
@@ -286,7 +297,7 @@ def approximate_agent(player):
 			for enemy in specific_enemy_neighbors(friendly):
 				attack_value = evaluate_attack(friendly, enemy, const.TERRITORIES, player)
 				value = evaluate(const.TERRITORIES, player)
-				if ((attack_value - value) > 0.5):
+				if (abs(attack_value) > abs(value)):
 					state = copy.deepcopy(const.TERRITORIES)
 					attack(friendly, enemy, player)
 					reward = evaluate(const.TERRITORIES, player) - value
@@ -420,20 +431,19 @@ def evaluate_attack(attacking, defending, state, player):
 	return value
 
 def evaluate(state, player):
-	const.features["controlled_territories"] = {"value": controlled_territories(state,player), "weighting": 1.0}
 	value = 0
-	for feature in const.features.values():
+	for feature_name, feature in const.features.iteritems():
+		feature["value"] = globals()[feature_name](state, player)
 		value += feature["value"] * feature["weighting"]
 	return value
 
-def update_after_attack(player, state, attacking, defending, nextState, reward, prev_Q_value):
+def update_after_attack(player, state, attacking, defending, nextState, reward, prev_value):
 	discount = 0.9
 	alpha = 0.3
-	difference = (reward + discount * evaluate(nextState, player)) - prev_Q_value
-	for feature in const.features.values():
-		feature["value"] = controlled_territories(state, player)
+	difference = (reward + discount * evaluate(nextState, player)) - prev_value
+	for feature_name, feature in const.features.iteritems():
+		feature["value"] = globals()[feature_name](state, player)
 		feature["weighting"] += alpha * difference * feature["value"]
-		print(feature["weighting"])
 
 
 # return a list of all attacks above a threshold of advantage

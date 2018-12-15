@@ -159,4 +159,4 @@ FORT = 2
 
 ACTIVITY = PLACE
 
-features = {"controlled_territories" : {"value": 0, "weighting": 0}}
+features = {"controlled_territories" : {"value": 0, "weighting": 1}}
