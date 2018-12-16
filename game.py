@@ -25,7 +25,7 @@ def main():
 	const.fortify_features = shelved_fortify_features
 	game_active = True
 	while (game_active):
-			game_active = choosy_agent(const.PLAYERS[0])
+			game_active = approximate_agent(const.PLAYERS[0])
 			if game_active:
 				game_active = random_agent(const.PLAYERS[1])
 			else:
@@ -301,7 +301,7 @@ def approximate_agent(player):
 						state = copy.deepcopy(const.TERRITORIES)
 						attack(friendly, enemy, player)
 						reward = evaluate(const.TERRITORIES, player) - value
-						update_after_attack(player, state, friendly, enemy, const.TERRITORIES, reward, attack_value)
+						update_after_attack(player, state, reward, attack_value)
 		const.ACTIVITY = const.FORT
 
 	if (const.ACTIVITY == const.FORT):
@@ -319,18 +319,20 @@ def approximate_agent(player):
 					add_to_fortify_queue(friendly, player)
 					inital = player["troops_to_place"]
 					while (player["troops_to_place"] > 0):
-						value = evaluate(state, player)
-						best_state_value = (state, value)
+						value = evaluate_fortify(state, player)
+						best_origin_dest_value = (None, None, value)
 						for neighbor in specific_friendly_neighbors(friendly):
 							if (neighbor in border_friendlies):
 								temp_state = copy.deepcopy(state)
 								place_from_fortify_queue(temp_state[temp_state.index(friendly)], temp_state[temp_state.index(neighbor)], player)
 								new_value = evaluate_fortify(temp_state, player)
-								if (new_value > best_state_value[1]):
-									best_state_value = (temp_state, new_value)
-								else:
-									player["troops_to_place"] += 1
-						if (player["troops_to_place"] == inital):
+								if (new_value > best_origin_dest_value[2]):
+									best_origin_dest_value = (friendly, neighbor, new_value)
+						if (best_origin_dest_value[0]):
+							place_from_fortify_queue(best_origin_dest_value[0], best_origin_dest_value[1], player)
+							reward = best_origin_dest_value[2] - value
+							update_after_fortify(player, state, reward, best_origin_dest_value[2])
+						else:
 							break
 					while (player["troops_to_place"] > 0):
 								neighbor = random.choice(specific_friendly_neighbors(friendly))
@@ -520,10 +522,18 @@ def evaluate_fortify(state, player):
 		value += feature["value"] * feature["weighting"]
 	return value
 
-def update_after_attack(player, state, attacking, defending, nextState, reward, prev_value):
+def update_after_attack(player, state, reward, prev_value):
 	discount = 0.9
 	alpha = 0.00001
-	difference = (reward + discount * evaluate(nextState, player)) - prev_value
+	difference = (reward + discount * evaluate(state, player)) - prev_value
+	for feature_name, feature in const.attack_features.iteritems():
+		feature["value"] = globals()[feature_name](state, player)
+		feature["weighting"] += alpha * difference * feature["value"]
+
+def update_after_fortify(player, state, reward, prev_value):
+	discount = 0.9
+	alpha = 0.00001
+	difference = (reward + discount * evaluate_fortify(state, player)) - prev_value
 	for feature_name, feature in const.attack_features.iteritems():
 		feature["value"] = globals()[feature_name](state, player)
 		feature["weighting"] += alpha * difference * feature["value"]
