@@ -7,7 +7,7 @@ import random, pygame, sys, const, random, os, copy, shelve
 # interpret the results with this: https://www.calculatorsoup.com/calculators/statistics/standard-deviation-calculator.php
 # put everything in the readme
 
-# to reset the q-learning delete shelved_features.db
+# to reset the q-learning weights delete shelved_features.db
 # rm shelved_attack_features.db shelved_fortify_features.db
 
 def main():
@@ -226,15 +226,12 @@ def approximate_agent(player):
 	elif (const.fortifying_round < 7):
 		player["troops_to_place"] = 3
 		friendlies = all_friendly_territories(player, const.TERRITORIES)
-		border_friendlies = []
-		for f in friendlies:
-			if (len(specific_enemy_neighbors(f, const.TERRITORIES)) > 0):
-				border_friendlies.append(f)
+		bfs = all_border_friendlies(const.TERRITORIES, player)
 		while (player["troops_to_place"] > 0):
 			greatest_enemy_threat = float("-inf")
 			territories_to_fortify = []
 
-			for border_friendly in border_friendlies:
+			for border_friendly in bfs:
 				neighboring_enemy_troops = 0
 				friendly_troops = border_friendly["troops"]
 
@@ -256,17 +253,11 @@ def approximate_agent(player):
 	if (const.ACTIVITY == const.PLACE and const.fortifying_round == 7):
 		reinforce_player(player)
 		while (player["troops_to_place"] > 0):
-			friendlies = all_friendly_territories(player, const.TERRITORIES)
-			neighboring_enemies = total_enemy_neighbors(friendlies)
-			all_enemies_of_enemy = total_enemy_neighbors(neighboring_enemies)
-			border_friendlies = []
-			for e in all_enemies_of_enemy:
-				if e["color"] == player["color"]:
-					border_friendlies.append(e)
+			bfs = all_border_friendlies(const.TERRITORIES, player)
 			greatest_enemy_threat = float("-inf")
 			territories_to_fortify = []
 
-			for border_friendly in border_friendlies:
+			for border_friendly in bfs:
 				neighboring_enemy_troops = 0
 				friendly_troops = border_friendly["troops"]
 
@@ -288,8 +279,6 @@ def approximate_agent(player):
 	if (const.ACTIVITY == const.ATTACK):
 		friendlies_with_troops = territories_available_to_attack(player)
 		attacking_flag = True
-
-
 		while (attacking_flag):
 			attacking_flag = False
 			value = evaluate(const.TERRITORIES, player)
@@ -322,7 +311,7 @@ def approximate_agent(player):
 						value = evaluate_fortify(state, player)
 						best_origin_dest_value = (None, None, value)
 						for neighbor in specific_friendly_neighbors(friendly):
-							if (neighbor in border_friendlies):
+							if (neighbor in bfs):
 								temp_state = copy.deepcopy(state)
 								place_from_fortify_queue(temp_state[temp_state.index(friendly)], temp_state[temp_state.index(neighbor)], player)
 								new_value = evaluate_fortify(temp_state, player)
@@ -357,13 +346,10 @@ def all_border_friendlies(state, player):
 
 def border_troop_imbalance(state, player):
 	friendlies = all_friendly_territories(player, state)
-	border_friendlies = []
-	for f in friendlies:
-		if (len(specific_enemy_neighbors(f, state)) > 0):
-			border_friendlies.append(f)
+	bfs = all_border_friendlies(const.TERRITORIES, player)
 	troop_imbalance = 0
 	enemy_ters = []
-	for ter in border_friendlies:
+	for ter in bfs:
 		troop_imbalance += ter["troops"]
 		for enemy_ter in specific_enemy_neighbors(ter, state):
 			if enemy_ter not in enemy_ters:
@@ -566,12 +552,9 @@ def decide_attack(player):
 
 def territories_available_to_attack(player):
 	friendlies = all_friendly_territories(player, const.TERRITORIES)
-	border_friendlies = []
-	for f in friendlies:
-		if (len(specific_enemy_neighbors(f, const.TERRITORIES)) > 0):
-			border_friendlies.append(f)
+	bfs = all_border_friendlies(const.TERRITORIES, player)
 	can_attack = []
-	for border_friendly in border_friendlies:
+	for border_friendly in bfs:
 		if (border_friendly["color"] == player["color"] and border_friendly["troops"] > 1):
 			can_attack.append(border_friendly)
 	return can_attack
@@ -715,8 +698,6 @@ def place(destination, player):
 # maximum number of die will always be rolled for attacker and defender
 # battle probabilites are hard coded using values obtained by simulation
 # for speedy battles
-
-# SHOULD BE IMPLEMENTED: CHOOSING HOW MANY TROOPS TO MOVE AFTER WINNING
 
 def attack(attacking, defending, player):
 	# calling attack
