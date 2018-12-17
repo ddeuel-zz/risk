@@ -142,7 +142,7 @@ ASIA, OCEANIA]
 
 PLAYERS = [{"player" : 1, "color" : BLUE, "troops_to_place" : 1},
 {"player" : 2, "color" : RED, "troops_to_place" : 1}]
-# {"player" : 3, "color" : PURPLE, "troops_to_place" : 1},
+# {"player" : 3, "color" : PURPLE, "troops_to_place" : 1}]
 # {"player" : 4, "color" : GREEN, "troops_to_place" : 1},
 # {"player" : 5, "color" : CYAN, "troops_to_place" : 1},
 # {"player" : 6, "color" : ORANGE, "troops_to_place" : 1},]
@@ -160,11 +160,10 @@ FORT = 2
 ACTIVITY = PLACE
 
 attack_features = {"controlled_territories" : {"value": 0, "weighting": 1},
-                  "controlled_continents" : {"value": 0, "weighting": 5},
+                  "controlled_continents" : {"value": 0, "weighting": 3},
                   "num_neighboring_enemy_troops" : {"value": 0, "weighting": -0.5},
                   "num_neighboring_enemy_territories" : {"value": 0, "weighting": -1},
                   "num_total_enemy_troops" : {"value": 0, "weighting": -0.3},
                   "num_remaining_enemies" : {"value": 0, "weighting": -2}}
 
 fortify_features = {"border_troop_imbalance" : {"value": 0, "weighting": 1}}
-
