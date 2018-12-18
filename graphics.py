@@ -44,6 +44,7 @@ def main():
                 if (const.ACTIVITY == const.FORT):
                   const.ACTIVITY = const.PLACE
                   game.reinforce_player(player)
+                  # UNCOMMENT ALL LINES FOR MULTIPLAYER, ALSO UNCOMMENT IN CONST.PY
                   game.choosy_agent(const.PLAYERS[1])
                   # game.choosy_agent(const.PLAYERS[2])
                   # game.choosy_agent(const.PLAYERS[3])
@@ -97,6 +98,7 @@ def main():
                 player["troops_to_place"] -= 1
           else:
             player["troops_to_place"] = 1
+            # UNCOMMENT ALL LINES FOR MULTIPLAYER, ALSO UNCOMMENT IN CONST.PY
             game.choosy_agent(const.PLAYERS[1])
             # game.choosy_agent(const.PLAYERS[2])
             # game.choosy_agent(const.PLAYERS[3])
@@ -115,6 +117,7 @@ def main():
           else:
             player["troops_to_place"] = 3
             game.choosy_agent(const.PLAYERS[1])
+            # UNCOMMENT ALL LINES FOR MULTIPLAYER, ALSO UNCOMMENT IN CONST.PY
             # game.choosy_agent(const.PLAYERS[2])
             # game.choosy_agent(const.PLAYERS[3])
             # game.choosy_agent(const.PLAYERS[4])

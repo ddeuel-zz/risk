@@ -48,7 +48,7 @@ q-learning agent 1.0 vs random agent 1.0:
 
 q-learning agent 1.0 vs choosy agent 2.0 results in a stalemate where neither player wins most of the time, with choosy agent 2.0 having the advantage
 
-The q-learning attack only agent 1.1 has more features and was trained over 1000 games before testing. This agent still only attacks once per round, We saw that the weights did not all move exactly in the direction that we expected them to, with some weights that we expected to be negative since they were related to the success of the enemy, being small values greater than 0. We saw that in training the the feature representing the number of controlled continents was most valued by about a factor of 2, our the number of controlled territories which makes sense. The number of neighboring troops took on a fairly large negative weighting which makes sense.
+The q-learning attack only agent 1.1 has more features and was trained over 1000 games before testing. This agent still only attacks once per round, We saw that the weights did not all move exactly in the direction that we expected them to, with some weights that we expected to be negative since they were related to the success of the enemy, being small values greater than 0. We saw that in training the the feature representing the number of controlled continents was most valued by about a factor of 2 over the number of controlled territories which makes sense. The number of neighboring troops took on a fairly large negative weighting which makes sense.
 
 q-learning agent 1.1 vs random agent 1.0:
 	average rounds taken for victory = 36.08
